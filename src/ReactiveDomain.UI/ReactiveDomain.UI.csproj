@@ -19,8 +19,7 @@
   <ItemGroup Condition="'$(TargetFramework)'=='netstandard2.1'">
     <Compile Remove="ViewObjects\Threading.cs" />
   </ItemGroup>
-  <ItemGroup Condition="">
-    <Reference Include="PresentationFramework" Condition="'$(TargetFramework)'=='net452'" />
-    <Reference Include="PresentationFramework" Condition="'$(TargetFramework)'=='net472'" />
+  <ItemGroup>    
+    <Reference Include="PresentationFramework" Condition="'$(TargetFramework)'=='net48'" />
   </ItemGroup>
 </Project>
