@@ -3,7 +3,6 @@ using System.Linq;
 using System.Net;
 using EventStore.ClientAPI;
 using ReactiveDomain.Util;
-using ReactiveDomain.Logging;
 
 namespace ReactiveDomain.EventStore
 {
@@ -77,9 +76,9 @@ namespace ReactiveDomain.EventStore
         public readonly bool VerboseLogging;
 
         /// <summary>
-        /// The <see cref="Logging.ILogger"/> that this connection will use.
+        /// The <see cref="Microsoft.Extensions.Logging.ILogger"/> that this connection will use.
         /// </summary>
-        public readonly Logging.ILogger Log;
+        public readonly Microsoft.Extensions.Logging.ILogger Log;
 
         /// <summary>
         /// Convenience connection type variables
@@ -103,7 +102,7 @@ namespace ReactiveDomain.EventStore
             string clusterDns,
             IReadOnlyList<IPEndPoint> ipEndPoints,
             int networkIpPort,
-            Logging.ILogger log,
+            Microsoft.Extensions.Logging.ILogger log,
             bool useTlsConnection,
             string targetHost,
             bool validateServer,
