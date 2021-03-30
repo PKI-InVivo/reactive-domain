@@ -1,7 +1,11 @@
-sudo: required
 language: csharp
-os: windows
 mono: none
+sudo: required
+dist: focal
+dotnet: 5.0
+global:
+    - DOTNET_SKIP_FIRST_TIME_EXPERIENCE=true
+    - DOTNET_CLI_TELEMETRY_OPTOUT=1
 
 branches:
   only:
@@ -12,6 +16,12 @@ addons:
   apt:
     packages:
       - powershell
+
+before_install:
+  - sudo apt-get update
+  - sudo apt-get install -y apt-transport-https
+  - sudo apt-get update
+  - sudo apt-get install -y dotnet-sdk-5.0
 
 before_script:
   - powershell -executionpolicy unrestricted -File ./tools/CheckAssemblyVersion.ps1
