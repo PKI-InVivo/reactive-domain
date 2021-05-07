@@ -87,8 +87,8 @@ $ReactiveDomainTestingProject = $ReactiveDomainRepo + "\src\ReactiveDomain.Testi
 $RDUIProject = $ReactiveDomainRepo + "\src\ReactiveDomain.UI\ReactiveDomain.UI.csproj"
 $RDUITestingProject = $ReactiveDomainRepo + "\src\ReactiveDomain.UI.Testing\ReactiveDomain.UI.Testing.csproj"
 $RDUsersProject = $ReactiveDomainRepo + "\src\ReactiveDomain.Users\ReactiveDomain.Users.csproj"
-$RDPolicyProject = $ReactiveDomainRepo + "\src\ReactiveDomain.Users\ReactiveDomain.Policy.csproj"
-$RDIdentityProject = $ReactiveDomainRepo + "\src\ReactiveDomain.Users\ReactiveDomain.Identity.csproj"
+$RDPolicyProject = $ReactiveDomainRepo + "\src\ReactiveDomain.Policy\ReactiveDomain.Policy.csproj"
+$RDIdentityProject = $ReactiveDomainRepo + "\src\ReactiveDomain.Identity\ReactiveDomain.Identity.csproj"
 
 $nuget = $ReactiveDomainRepo + "\src\.nuget\nuget.exe"
 
@@ -158,21 +158,16 @@ function GetPackageRefFromProject([string]$Id, [string]$CsProj, [string]$Framewo
         $compOperator = "!="
     }
 
-    
-    if ($currentCondition -match "net48")
+    if ($currentCondition -match "net472")
     {
-        $currentFramework = "net48"
+        $currentFramework = "net472"
     }
 
-    if ($currentCondition -match "netstandard2.1")
+    if ($currentCondition -match "netstandard2.0")
     {
-        $currentFramework = "netstandard2.1"
+        $currentFramework = "netstandard2.0"
     }
 
-     if ($currentCondition -match "netcoreapp3.1")
-    {
-        $currentFramework = "netcoreapp3.1"
-    }
 
     $myObj = New-Object -TypeName PackagRef 
     $myObj.Version = $currentVersion
@@ -195,34 +190,12 @@ function UpdateDependencyVersions([string]$Nuspec, [string]$CsProj)
 
     [xml]$xml = Get-Content -Path $Nuspec -Encoding UTF8
     $dependencyNodes = $xml.package.metadata.dependencies.group.dependency
-
-    #framework 48 processing
-    $f48 = $xml | Select-XML -XPath "//package/metadata/dependencies/group[@targetFramework='.NETFramework4.8.0']"
-    $framework48Nodes = $f48.Node.ChildNodes
     
-    foreach($refnode in $framework48Nodes)
-    {
-        if ( $refnode.id -match "ReactiveDomain")
-        {
-            $refnode.version = $RDVersion
-            continue
-        }
-
-        $pRef = GetPackageRefFromProject $refnode.id $CsProj "net48"
-        if ((($pRef.ComparisonOperator -eq "" -or $pRef.Framework -eq "") -or 
-            ($pRef.ComparisonOperator -eq "==" -and $pRef.Framework -eq "net48") -or 
-            ($pRef.ComparisonOperator -eq "!=" -and $pRef.Framework -ne "net48")) -and
-            ($pRef.version -ne ""))
-        {
-            $refnode.version = $pRef.Version
-        }      
-    }
+    #netstandard2.0 processing
+    $netstandard20 = $xml | Select-XML -XPath "//package/metadata/dependencies/group[@targetFramework='.NETStandard2.0']"
+    $netstandard20Nodes = $netstandard20.Node.ChildNodes
     
-    #netstandard2.1 processing
-    $netstandard21 = $xml | Select-XML -XPath "//package/metadata/dependencies/group[@targetFramework='.NETStandard2.1']"
-    $netstandard21Nodes = $netstandard21.Node.ChildNodes
-    
-    foreach($refnode in $netstandard21Nodes)
+    foreach($refnode in $netstandard20Nodes)
     {
         if ( $refnode.id -match "ReactiveDomain")
         {
@@ -230,36 +203,15 @@ function UpdateDependencyVersions([string]$Nuspec, [string]$CsProj)
             continue
         }
         
-        $pRef = GetPackageRefFromProject $refnode.id $CsProj "netstandard2.1"
+        $pRef = GetPackageRefFromProject $refnode.id $CsProj "netstandard2.0"
         if ((($pRef.ComparisonOperator -eq "" -or $pRef.Framework -eq "") -or 
-            ($pRef.ComparisonOperator -eq "==" -and $pRef.Framework -eq "netstandard2.1") -or 
-            ($pRef.ComparisonOperator -eq "!=" -and $pRef.Framework -ne "netstandard2.1")) -and
+            ($pRef.ComparisonOperator -eq "==" -and $pRef.Framework -eq "netstandard2.0") -or 
+            ($pRef.ComparisonOperator -eq "!=" -and $pRef.Framework -ne "netstandard2.0")) -and
             ($pRef.version -ne ""))
         { 
             $refnode.version = $pRef.Version
         }      
-    }
-    #netcoreapp3.1 processing
-    $netcore31 = $xml | Select-XML -XPath "//package/metadata/dependencies/group[@targetFramework='netcoreapp3.1']"
-    $netcore31Nodes = $netcore31.Node.ChildNodes
-    
-    foreach($refnode in $netcore31Nodes)
-    {
-        if ( $refnode.id -match "ReactiveDomain")
-        {
-            $refnode.version = $RDVersion
-            continue
-        }
-        
-        $pRef = GetPackageRefFromProject $refnode.id $CsProj "netcoreapp3.1"
-        if ((($pRef.ComparisonOperator -eq "" -or $pRef.Framework -eq "") -or 
-            ($pRef.ComparisonOperator -eq "==" -and $pRef.Framework -eq "netcoreapp3.1") -or 
-            ($pRef.ComparisonOperator -eq "!=" -and $pRef.Framework -ne "netcoreapp3.1")) -and
-            ($pRef.version -ne ""))
-        { 
-            $refnode.version = $pRef.Version
-        }      
-    }
+    }    
     $xml.Save($Nuspec)
     Write-Host "Updated dependency versions of: $Nuspec"
 }
@@ -275,6 +227,8 @@ UpdateDependencyVersions $ReactiveDomainNuspec $RDMessagingProject
 UpdateDependencyVersions $ReactiveDomainNuspec $RDPersistenceProject 
 UpdateDependencyVersions $ReactiveDomainNuspec $RDTransportProject 
 UpdateDependencyVersions $ReactiveDomainNuspec $RDUsersProject 
+UpdateDependencyVersions $ReactiveDomainNuspec $RDPolicyProject 
+UpdateDependencyVersions $ReactiveDomainNuspec $RDIdentityProject 
 
 # These go into updating the ReactiveDomainUI.nuspec
 UpdateDependencyVersions $ReactiveDomainUINuspec $RDUIProject 
@@ -285,23 +239,18 @@ UpdateDependencyVersions $ReactiveDomainTestingNuspec $ReactiveDomainTestingProj
 # These go into updating the ReactiveDomain.UI.Testing.nuspec
 UpdateDependencyVersions $ReactiveDomainUITestingNuspec $RDUITestingProject 
 
-# These go into updating the ReactiveDomain.IdentityStorage.nuspec
-UpdateDependencyVersions $ReactiveDomainIdentityStorageNuspec $RDIdentityStorageProject 
-
-
 # *******************************************************************************************************
 
 # Pack the nuspec files to create the .nupkg files using the set versionString  *************************
 
 Write-Host "Packing reactivedomain nuget packages"
-Write-Host "Version string to use: " + $versionString
-$versionString = $RDVersion
+Write-Host "Version string to use: " + $RDVersion
+Write-Host "RD-Vuspec: " + $ReactiveDomainNuspec
 
-& $nuget pack $ReactiveDomainNuspec -Version $versionString -OutputDirectory $nupkgsDir
-& $nuget pack $ReactiveDomainTestingNuspec -Version $versionString -OutputDirectory $nupkgsDir
-& $nuget pack $ReactiveDomainUINuspec -Version $versionString -OutputDirectory $nupkgsDir
-& $nuget pack $ReactiveDomainUITestingNuspec -Version $versionString -OutputDirectory $nupkgsDir
-& $nuget pack $ReactiveDomainIdentityStorageNuspec -Version $versionString -OutputDirectory $nupkgsDir
+& $nuget pack $ReactiveDomainNuspec -Version $RDVersion -OutputDirectory $nupkgsDir
+& $nuget pack $ReactiveDomainTestingNuspec -Version $RDVersion -OutputDirectory $nupkgsDir
+& $nuget pack $ReactiveDomainUINuspec -Version $RDVersion -OutputDirectory $nupkgsDir
+& $nuget pack $ReactiveDomainUITestingNuspec -Version $RDVersion -OutputDirectory $nupkgsDir
 
 # *******************************************************************************************************************************
 

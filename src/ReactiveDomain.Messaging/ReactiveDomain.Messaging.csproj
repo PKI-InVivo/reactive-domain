@@ -6,7 +6,7 @@
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
-    <PackageReference Include="System.Diagnostics.PerformanceCounter" Version="5.0.1" Condition="'$(TargetFramework)'!='net48'" />
+    <PackageReference Include="System.Diagnostics.PerformanceCounter" Version="5.0.1"/>
     <ProjectReference Include="..\ReactiveDomain.Core\ReactiveDomain.Core.csproj" />
   </ItemGroup>
 </Project>
