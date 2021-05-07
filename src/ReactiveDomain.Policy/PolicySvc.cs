@@ -35,7 +35,7 @@ namespace ReactiveDomain.Policy
         {
 
             var application = _repo.GetById<SecuredApplication>(_applicationId, cmd);
-            application.Policies.First(p=> p.Id == cmd.PolicyId).AddRole(cmd.RoleId, cmd.Name);
+            application.Policies.First(p=> p.Id == cmd.PolicyId).AddRole(cmd.RoleId ?? Guid.NewGuid(), cmd.Name);
             _repo.Save(application);
             return cmd.Succeed();
         }

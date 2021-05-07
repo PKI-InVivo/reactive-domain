@@ -14,7 +14,7 @@ namespace ReactiveDomain.Policy.Messages
         public class CreateRole : Command
         {
             /// <summary>The unique ID of the new role.</summary>
-            public readonly Guid RoleId;
+            public readonly Guid? RoleId;
             /// <summary>The name of the role.</summary>
             public readonly string Name;
             /// <summary>The policy this role applies to.</summary>
@@ -25,10 +25,9 @@ namespace ReactiveDomain.Policy.Messages
             /// Create a new Role.
             /// </summary>
             public CreateRole(
-                Guid roleId,
+                Guid? roleId,
                 string name,
-                Guid policyId)
-            {
+                Guid policyId) {
                 RoleId = roleId;
                 Name = name;
                 PolicyId = policyId;

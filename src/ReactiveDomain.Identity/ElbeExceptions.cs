@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace ReactiveDomain.IdentityServer4.Storage
+namespace ReactiveDomain.Identity
 {
     /// <summary>
     /// Throw this exception when a user lookup returns no results.

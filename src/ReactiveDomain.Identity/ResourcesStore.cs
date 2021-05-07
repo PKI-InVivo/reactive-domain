@@ -2,30 +2,36 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using IdentityServer4.Extensions;
 using IdentityServer4.Models;
 using IdentityServer4.Stores;
+using ReactiveDomain.Util;
 
-namespace ReactiveDomain.IdentityServer4.Storage {
+namespace ReactiveDomain.Identity {
     public class ResourcesStore : IResourceStore
     {
         private readonly Resources _resources = new Resources();
 
         public ResourcesStore()
         {
-            _resources.IdentityResources.Add(new IdentityResources.OpenId());
-            _resources.IdentityResources.Add(new IdentityResources.Profile());
+            _resources.IdentityResources.Add( new IdentityResource(
+                name: "openid",
+                userClaims: new[] { "sub" },
+                displayName: "Your user identifier"));
+            _resources.IdentityResources.Add( new IdentityResource(
+                name: "profile",
+                userClaims: new[] { "name", "email", "website" },
+                displayName: "Your profile data"));
             _resources.ApiScopes.Add(new ApiScope("api1", "My API"));
             _resources.ApiScopes.Add(new ApiScope("api2", "My Other API"));
         }
-
+        //todo:use hash set operations for comparisons
 
         public async Task<IEnumerable<IdentityResource>> FindIdentityResourcesByScopeNameAsync(
             IEnumerable<string> scopeNames)
         {
-            var names = scopeNames.ToHashSet();
+            var names = new HashSet<string>(scopeNames);
             var resources = new List<IdentityResource>();
-            if (!names.IsNullOrEmpty())
+            if (!names.IsEmpty())
             {
                 resources.AddRange(_resources.IdentityResources.Where(r => names.Contains(r.Name, StringComparer.Ordinal)));
             }
@@ -34,9 +40,9 @@ namespace ReactiveDomain.IdentityServer4.Storage {
 
         public async Task<IEnumerable<ApiScope>> FindApiScopesByNameAsync(IEnumerable<string> scopeNames)
         {
-            var names = scopeNames.ToHashSet();
+            var names = new HashSet<string>(scopeNames);
             var apiScopes = new List<ApiScope>();
-            if (!names.IsNullOrEmpty())
+            if (!names.IsEmpty())
             {
                 apiScopes.AddRange(_resources.ApiScopes.Where(r => names.Contains(r.Name, StringComparer.Ordinal)));
             }
@@ -45,12 +51,12 @@ namespace ReactiveDomain.IdentityServer4.Storage {
 
         public async Task<IEnumerable<ApiResource>> FindApiResourcesByScopeNameAsync(IEnumerable<string> scopeNames)
         {
-            var names = scopeNames.ToHashSet();
+            var names = new HashSet<string>(scopeNames);
             var apiResources = new List<ApiResource>();
-            if (!names.IsNullOrEmpty())
+            if (!names.IsEmpty())
             {
                 foreach (var apiResource in _resources.ApiResources) {
-                    var scopesHash = apiResource.Scopes.ToHashSet();
+                    var scopesHash = new HashSet<string>(apiResource.Scopes);
                     if (scopesHash.Overlaps(names)) {
                         apiResources.Add(apiResource);
                     }
@@ -61,9 +67,9 @@ namespace ReactiveDomain.IdentityServer4.Storage {
 
         public async Task<IEnumerable<ApiResource>> FindApiResourcesByNameAsync(IEnumerable<string> apiResourceNames)
         {
-            var names = apiResourceNames.ToHashSet();
+            var names = new HashSet<string>(apiResourceNames);
             var apiResources = new List<ApiResource>();
-            if (!names.IsNullOrEmpty())
+            if (!names.IsEmpty())
             {
                 apiResources.AddRange(_resources.ApiResources.Where(r => names.Contains(r.Name, StringComparer.Ordinal)));
             }

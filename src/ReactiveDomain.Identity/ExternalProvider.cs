@@ -1,9 +1,9 @@
 ﻿using System;
+using ReactiveDomain.Identity.Messages;
 using ReactiveDomain.Messaging;
-using ReactiveDomain.Users.Messages;
 using ReactiveDomain.Util;
 
-namespace ReactiveDomain.Users.Domain.Aggregates
+namespace ReactiveDomain.Identity
 {
     public class ExternalProvider : AggregateRoot
     {
