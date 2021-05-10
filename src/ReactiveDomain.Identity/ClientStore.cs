@@ -18,7 +18,7 @@ namespace ReactiveDomain.Identity {
             },
             new  Client {
                 ClientId = "Elbe.Authentication",
-                AllowedGrantTypes = {OidcConstants.GrantTypes.ClientCredentials},
+                AllowedGrantTypes = {OidcConstants.GrantTypes.ClientCredentials, OidcConstants.GrantTypes.AuthorizationCode},
                 ClientSecrets = { new Secret("4BA85604-A18C-48A4-845E-0A59AA9185AE@PKI".ToSha256()) },
                 AllowedScopes = { "openid", "profile" },
                 RedirectUris = {"http://localhost/elbe","https://localhost/elbe"},
