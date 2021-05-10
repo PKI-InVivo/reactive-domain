@@ -16,7 +16,18 @@ namespace ReactiveDomain.Policy.Messages
                 PolicyId = policyId;
             }
         }
-        
+       
+        public class AddRole : Command
+        {
+            public readonly Guid PolicyUserId;
+            public readonly string RoleName;
+
+            public AddRole(Guid policyUserId, string roleName)
+            {
+                PolicyUserId = policyUserId;
+                RoleName = roleName;
+            }
+        }
         public class RoleAdded : Event
         {
             public readonly Guid PolicyUserId;
@@ -31,7 +42,17 @@ namespace ReactiveDomain.Policy.Messages
             }
         }
 
-       
+        public class RemoveRole : Command
+        {
+            public readonly Guid PolicyUserId;
+            public readonly string RoleName;
+
+            public RemoveRole(Guid policyUserId, string roleName)
+            {
+                PolicyUserId = policyUserId;
+                RoleName = roleName;
+            }
+        }
 
         public class RoleRemoved : Event
         {

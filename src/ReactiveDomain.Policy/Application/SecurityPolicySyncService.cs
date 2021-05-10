@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using ReactiveDomain.Foundation;
+using ReactiveDomain.Messaging;
 using ReactiveDomain.Messaging.Bus;
 using ReactiveDomain.Policy.Messages;
 using ReactiveDomain.Policy.ReadModels;
@@ -17,13 +18,13 @@ namespace ReactiveDomain.Policy.Application
         IHandle<ApplicationMsgs.ApplicationCreated>,
         IHandle<ApplicationMsgs.PolicyCreated>,
         IHandle<RoleMsgs.RoleCreated>//,
-        //IHandle<UserMsgs.UserCreated>,
-        //IHandle<UserMsgs.Deactivated>,
-        //IHandle<UserMsgs.Activated>,
-        //IHandle<UserMsgs.RoleAssigned>,
-        //IHandle<UserMsgs.AuthDomainUpdated>,
-        //IHandle<UserMsgs.UserNameUpdated>,
-        //IHandle<UserMsgs.RoleUnassigned>
+                                     //IHandle<UserMsgs.UserCreated>,
+                                     //IHandle<UserMsgs.Deactivated>,
+                                     //IHandle<UserMsgs.Activated>,
+                                     //IHandle<UserMsgs.RoleAssigned>,
+                                     //IHandle<UserMsgs.AuthDomainUpdated>,
+                                     //IHandle<UserMsgs.UserNameUpdated>,
+                                     //IHandle<UserMsgs.RoleUnassigned>
     {
         //public data
         public SecurityPolicy Policy;
@@ -31,7 +32,8 @@ namespace ReactiveDomain.Policy.Application
         private readonly Dictionary<Guid, Role> _roles = new Dictionary<Guid, Role>();
         private readonly Dictionary<Guid, SecuredApplication> _applications = new Dictionary<Guid, SecuredApplication>();
         //private SubjectRM _subjectRM;
-
+        private ICorrelatedRepository _repo;
+        private ICorrelatedMessage _source;
 
         /// <summary>
         /// Create a read model for a synchronized Security Policy.
@@ -42,7 +44,8 @@ namespace ReactiveDomain.Policy.Application
             : base(nameof(ApplicationsRM), () => conn.GetListener(nameof(SecurityPolicySyncService)))
         {
             var dispatcher = new Dispatcher(nameof(SecurityPolicySyncService));
-           // var appSvc = new ApplicationSvc(conn, dispatcher);
+            _repo = conn.GetCorrelatedRepository();
+            _source = new SyncServiceCorrelationSource { CorrelationId = Guid.NewGuid() };
 
             Policy = basePolicy ?? new SecurityPolicyBuilder().Build();
 
@@ -59,22 +62,17 @@ namespace ReactiveDomain.Policy.Application
             if (dbApp == null)
             {
                 appId = Guid.NewGuid();
-                var appCmd = new ApplicationMsgs.CreateApplication(appId, Policy.ApplicationName, Policy.ApplicationVersion) { CorrelationId = correlationId };
-                dispatcher.Send(appCmd);
-                var policyId = Guid.NewGuid();
-                var polCmd = new ApplicationMsgs.CreatePolicy(policyId, Policy.PolicyName, appId) { CorrelationId = correlationId };
-                dispatcher.Send(polCmd);
-                Policy.OwningApplication.UpdateApplicationDetails(appId);
-                Policy.PolicyId = policyId;
+                var app = new Domain.SecuredApplication(appId, Policy.ApplicationName, Policy.ApplicationVersion, _source);
+                _repo.Save(app);
             }
             else
             {
                 appId = dbApp.Id;
             }
 
-            var policySvc = new PolicySvc(appId, conn, dispatcher);
 
-            
+
+
             using (var appReader = conn.GetReader("RoleReader"))
             {
                 appReader.EventStream.Subscribe<ApplicationMsgs.ApplicationCreated>(this);
@@ -83,11 +81,13 @@ namespace ReactiveDomain.Policy.Application
 
                 appReader.Read<Domain.SecuredApplication>(appId);
             }
-            if (dbApp == null) {
+            if (dbApp == null)
+            {
                 dbApp = _applications[appId];
             }
             Policy.OwningApplication.UpdateApplicationDetails(appId);
-            Policy.PolicyId = dbApp.Policies.First(p => p.PolicyName.Equals(Policy.PolicyName)).PolicyId;
+
+            Policy.PolicyId = dbApp.Policies.First().PolicyId; //todo:add multi policy support
 
             //enrich db with roles from the base policy, if any are missing
             foreach (var role in Policy.Roles)
@@ -95,8 +95,9 @@ namespace ReactiveDomain.Policy.Application
                 if (_roles.Values.All(r => !r.Name.Equals(role.Name, StringComparison.OrdinalIgnoreCase)))
                 {
                     var roleId = Guid.NewGuid();
-                    var cmd = new RoleMsgs.CreateRole(roleId, role.Name, Policy.PolicyId) { CorrelationId = correlationId };
-                    dispatcher.Send(cmd);
+                    var application = _repo.GetById<Domain.SecuredApplication>(appId, _source);
+                    application.DefaultPolicy.AddRole(roleId, role.Name);
+                    _repo.Save(application);
                     role.SetRoleId(roleId);
                     _roles.Add(roleId, new Role(roleId, role.Name, role.PolicyId));
                 }
@@ -143,8 +144,8 @@ namespace ReactiveDomain.Policy.Application
             var app = _applications[@event.ApplicationId];
             app.AddPolicy(
                 new SecurityPolicy(
-                    @event.ClientId, 
-                    @event.PolicyId, app, 
+                    @event.ClientId,
+                    @event.PolicyId, app,
                     principal => default
                 )
             );
@@ -163,7 +164,7 @@ namespace ReactiveDomain.Policy.Application
                     @event.Name,
                     Policy.PolicyId));
         }
-       
+
 
         /*
         /// <summary>
@@ -241,6 +242,11 @@ namespace ReactiveDomain.Policy.Application
             return user.Roles.FindAll(x => x.Application == application);
         }
         */
-
+        class SyncServiceCorrelationSource : ICorrelatedMessage
+        {
+            public Guid MsgId => Guid.NewGuid();
+            public Guid CorrelationId { get; set; }
+            public Guid CausationId { get; set; }
+        }
     }
 }

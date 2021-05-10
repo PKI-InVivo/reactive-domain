@@ -15,7 +15,7 @@ namespace ReactiveDomain.Policy.Messages
         public class CreateApplication : Command
         {
             /// <summary>The unique ID of the new application.</summary>
-            public readonly Guid Id;
+            public readonly Guid ApplicationId;
             /// <summary> Application name</summary>
             public readonly string Name;
             /// <summary> Application name</summary>
@@ -24,15 +24,15 @@ namespace ReactiveDomain.Policy.Messages
             /// <summary>
             /// Register a new application.
             /// </summary>
-            /// <param name="id">The unique ID of the new application.</param>
+            /// <param name="applicationId">The unique ID of the new application.</param>
             /// <param name="name">application name.</param>
             /// <param name="version">application version</param>
             public CreateApplication(
-                Guid id,
+                Guid applicationId,
                 string name,
                 string version)
             {
-                Id = id;
+                ApplicationId = applicationId;
                 Name = name;
                 Version = version;
             }

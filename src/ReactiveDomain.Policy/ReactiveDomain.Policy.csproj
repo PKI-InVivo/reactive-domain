@@ -9,7 +9,7 @@
     <Compile Remove="Constants.cs" />
   </ItemGroup> 
   <ItemGroup>
-    <PackageReference Include="IdentityModel" Version="5.1.0" />
+    <PackageReference Include="IdentityModel" Version="4.6.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
     <PackageReference Include="System.DirectoryServices" Version="5.0.0" />
