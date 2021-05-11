@@ -15,7 +15,6 @@ namespace ReactiveDomain.Policy.Application
         private readonly List<Type> _permissions = new List<Type>(); //hash or similar?
         private bool _disposed;
         private bool _isBuilt;
-        private string _defaultRole;
         private Func<ClaimsPrincipal, UserDTO> _findUserFunc;
 
         public SecurityPolicyBuilder(string policyName = "default")
@@ -48,13 +47,7 @@ namespace ReactiveDomain.Policy.Application
             }
             return this;
         }
-
-        public SecurityPolicyBuilder WithDefaultRole(string roleName)
-        {
-            _defaultRole = roleName;
-            return this;
-        }
-
+        
         public SecurityPolicyBuilder WithUserResolver(Func<ClaimsPrincipal, UserDTO> findUserFunc)
         {
             _findUserFunc = findUserFunc;
@@ -86,24 +79,13 @@ namespace ReactiveDomain.Policy.Application
         public SecurityPolicy Build()
         {
             _isBuilt = true;
-            Role defaultRole = null;
-            if (_roles.ContainsKey(_defaultRole ?? string.Empty))
-            {
-                defaultRole = _roles[_defaultRole];
-            }
-            else if (!string.IsNullOrWhiteSpace(_defaultRole))
-            {
-                defaultRole = new Role(Guid.Empty, _defaultRole, Guid.Empty);
-                _roles.Add(_defaultRole, defaultRole);
-            }
-
+          
             var policy = new SecurityPolicy(
                                 _policyName,
                                 Guid.Empty,
                                 _app,
                                 _findUserFunc,
-                                _roles.Values.ToList(),
-                                defaultRole);
+                                _roles.Values.ToList());
             Dispose();
             return policy;
         }

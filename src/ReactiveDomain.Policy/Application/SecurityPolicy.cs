@@ -13,9 +13,7 @@ namespace ReactiveDomain.Policy.Application
         public readonly string PolicyName;
         public Guid PolicyId { get; internal set; }
         private readonly List<Role> _roles;
-        private readonly Role _defaultRole;
         private readonly List<UserDTO> _users = new List<UserDTO>();
-        private AuthorizedUser _currentUser;
         private Func<ClaimsPrincipal, UserDTO> _findUser;
 
         public SecuredApplication OwningApplication { get; }
@@ -28,11 +26,7 @@ namespace ReactiveDomain.Policy.Application
         public string RedirectionUrl => OwningApplication.RedirectionUrl;
         public string ClientSecret => OwningApplication.ClientSecret;
 
-        public AuthorizedUser CurrentUser
-        {
-            get => _currentUser;
-            set { _currentUser = value; }
-        }
+        public AuthorizedUser CurrentUser { get; set; }
 
         public bool TrySetCurrentUser(ClaimsPrincipal authenticatedUser, out User user)
         {
@@ -69,19 +63,13 @@ namespace ReactiveDomain.Policy.Application
             Guid policyId,
             SecuredApplication owningApplication,
             Func<ClaimsPrincipal, UserDTO> findUser,
-            List<Role> roles = null,
-            Role defaultRole = null)
+            List<Role> roles = null)
         {
             PolicyName = policyName;
             PolicyId = policyId;
             OwningApplication = owningApplication;
             _findUser = findUser;
             _roles = roles ?? new List<Role>();
-            _defaultRole = defaultRole;
-            if (_defaultRole != null && !_roles.Any(r => r.Name.Equals(_defaultRole.Name)))
-            {
-                _roles.Add(_defaultRole);
-            }
         }
 
         //used for synchronizing with the backing store
