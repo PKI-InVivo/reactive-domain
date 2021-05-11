@@ -11,6 +11,7 @@ namespace ReactiveDomain.Foundation
 {
     public abstract class ReadModelBase :
         IHandle<IMessage>,
+        IHandle<Message>,
         IPublisher,
         IDisposable
     {
@@ -87,14 +88,8 @@ namespace ReactiveDomain.Foundation
             _disposed = true;
         }
 
-        public void Handle(IMessage message)
-        {
-            ((IHandle<IMessage>)_queue).Handle(message);
-        }
-
-        public void Publish(IMessage message)
-        {
-            ((IPublisher)_queue).Publish(message);
-        }
+        public void Handle(Message message) { ((IHandle<IMessage>)_queue).Handle(message); }
+        public void Handle(IMessage message) { ((IHandle<IMessage>)_queue).Handle(message); }
+        public void Publish(IMessage message) { ((IPublisher)_queue).Publish(message); }
     }
 }

@@ -48,6 +48,7 @@
     <PackageReference Include="System.DirectoryServices.AccountManagement" Version="5.0.0" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\ReactiveDomain.Policy\ReactiveDomain.Policy.csproj" />
     <ProjectReference Include="..\ReactiveDomain.Users\ReactiveDomain.Users.csproj" />
   </ItemGroup>
 </Project>

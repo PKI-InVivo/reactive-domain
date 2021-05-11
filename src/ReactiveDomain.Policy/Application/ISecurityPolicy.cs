@@ -8,6 +8,9 @@ namespace ReactiveDomain.Policy.Application
     {
         string ApplicationName { get; }
         string ApplicationVersion { get; }
+        string ClientId { get; }
+        string RedirectionUrl { get; }
+        string ClientSecret { get; }
         bool TrySetCurrentUser(ClaimsPrincipal authenticatedUser, out UserDTO user);
         UserDTO GetCurrentUser();
     }

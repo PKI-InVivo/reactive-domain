@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using ReactiveDomain.Foundation;
+using ReactiveDomain.Messaging;
 using ReactiveDomain.Messaging.Bus;
 using ReactiveDomain.Policy.Application;
 using ReactiveDomain.Policy.Messages;
@@ -19,6 +20,8 @@ namespace ReactiveDomain.Policy.ReadModels
     public class ApplicationsRM :
         ReadModelBase,
         IHandle<ApplicationMsgs.ApplicationCreated>,
+        IHandle<ApplicationMsgs.STSClientDetailsAdded>,
+        IHandle<ApplicationMsgs.STSClientSecretAdded>,
         IHandle<RoleMsgs.RoleCreated>//,
        
         //IHandle<UserPolicyMsgs.RoleAdded>,
@@ -40,12 +43,14 @@ namespace ReactiveDomain.Policy.ReadModels
         {
             //set handlers
             EventStream.Subscribe<ApplicationMsgs.ApplicationCreated>(this);
+            EventStream.Subscribe<ApplicationMsgs.STSClientSecretAdded>(this);
+            EventStream.Subscribe<ApplicationMsgs.STSClientDetailsAdded>(this);
             EventStream.Subscribe<RoleMsgs.RoleCreated>(this);
 
             //read
             long? checkpoint;
-            using (var reader = conn.GetReader(nameof(ApplicationsRM), this))
-            {                
+            using (var reader = conn.GetReader(nameof(ApplicationsRM), this)) {
+                reader.EventStream.Subscribe<Message>(this);
                 reader.Read<Domain.SecuredApplication>();                
                 checkpoint = reader.Position;
             }            
@@ -132,6 +137,18 @@ namespace ReactiveDomain.Policy.ReadModels
                     @event.ApplicationVersion
                 ));
         }
+        public void Handle(ApplicationMsgs.STSClientDetailsAdded @event) {
+            if (_applications.TryGetValue(@event.ApplicationId, out var app)) {
+                app.ClientSecret = @event.EncryptedClientSecret;
+                app.RedirectionUrl = @event.RedirectUri;
+            }
+        }
+
+        public void Handle(ApplicationMsgs.STSClientSecretAdded @event) {
+            if (_applications.TryGetValue(@event.ApplicationId, out var app)) {
+                app.ClientSecret = @event.EncryptedClientSecret;
+            }
+        }
         /// <summary>
         /// Given the role created event, adds a new role to the collection of roles.
         /// </summary>
@@ -190,5 +207,6 @@ namespace ReactiveDomain.Policy.ReadModels
             //return user.Roles.Where(x => x.PolicyId == policyId).ToList();
         }
 
+       
     }
 }

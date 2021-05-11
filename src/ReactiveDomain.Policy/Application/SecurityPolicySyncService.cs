@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using ReactiveDomain.Foundation;
 using ReactiveDomain.Messaging;
 using ReactiveDomain.Messaging.Bus;
@@ -16,6 +17,8 @@ namespace ReactiveDomain.Policy.Application
     public class SecurityPolicySyncService :
         ReadModelBase,
         IHandle<ApplicationMsgs.ApplicationCreated>,
+        IHandle<ApplicationMsgs.STSClientDetailsAdded>,
+        IHandle<ApplicationMsgs.STSClientSecretAdded>,
         IHandle<ApplicationMsgs.PolicyCreated>,
         IHandle<RoleMsgs.RoleCreated>//,
                                      //IHandle<UserMsgs.UserCreated>,
@@ -30,10 +33,8 @@ namespace ReactiveDomain.Policy.Application
         public SecurityPolicy Policy;
 
         private readonly Dictionary<Guid, Role> _roles = new Dictionary<Guid, Role>();
-        private readonly Dictionary<Guid, SecuredApplication> _applications = new Dictionary<Guid, SecuredApplication>();
-        //private SubjectRM _subjectRM;
-        private ICorrelatedRepository _repo;
-        private ICorrelatedMessage _source;
+        private SecuredApplication dbApp;
+        
 
         /// <summary>
         /// Create a read model for a synchronized Security Policy.
@@ -43,50 +44,46 @@ namespace ReactiveDomain.Policy.Application
             IConfiguredConnection conn)
             : base(nameof(ApplicationsRM), () => conn.GetListener(nameof(SecurityPolicySyncService)))
         {
-            var dispatcher = new Dispatcher(nameof(SecurityPolicySyncService));
-            _repo = conn.GetCorrelatedRepository();
-            _source = new SyncServiceCorrelationSource { CorrelationId = Guid.NewGuid() };
+            var repo = conn.GetCorrelatedRepository();
+            ICorrelatedMessage source = new SyncServiceCorrelationSource { CorrelationId = Guid.NewGuid() };
 
             Policy = basePolicy ?? new SecurityPolicyBuilder().Build();
-
+           
+            var appList = new Dictionary<string, Guid>();
             using (var appReader = conn.GetReader("AppReader"))
             {
-                appReader.EventStream.Subscribe<ApplicationMsgs.ApplicationCreated>(this);
+                appReader.EventStream.Subscribe(new AdHocHandler<ApplicationMsgs.ApplicationCreated>(evt => appList.Add($"{evt.Name}-{evt.ApplicationVersion}", evt.ApplicationId)));
                 appReader.Read(typeof(ApplicationMsgs.ApplicationCreated));
             }
             Guid appId;
-            Guid correlationId = Guid.NewGuid();
-            var dbApp = _applications.Values.FirstOrDefault(
-                app => string.CompareOrdinal(app.Name, Policy.ApplicationName) == 0 &&
-                                string.CompareOrdinal(app.Version, Policy.ApplicationVersion) == 0);
-            if (dbApp == null)
+            if (appList.ContainsKey($"{Policy.ApplicationName}-{Policy.ApplicationVersion}"))
             {
-                appId = Guid.NewGuid();
-                var app = new Domain.SecuredApplication(appId, Policy.ApplicationName, Policy.ApplicationVersion, _source);
-                _repo.Save(app);
+                appId = appList[$"{Policy.ApplicationName}-{Policy.ApplicationVersion}"];
             }
             else
             {
-                appId = dbApp.Id;
+                appId = Guid.NewGuid();
+                var app = new Domain.SecuredApplication(appId, Policy.ApplicationName, Policy.ApplicationVersion, source);
+                //todo: encrypt this
+                app.AddSTSClientSecret($"{Guid.NewGuid()}@PKI");
+                repo.Save(app);
             }
+            //build RM for targeted app
 
+            EventStream.Subscribe<ApplicationMsgs.ApplicationCreated>(this);
+            EventStream.Subscribe<ApplicationMsgs.STSClientSecretAdded>(this);
+            EventStream.Subscribe<ApplicationMsgs.STSClientDetailsAdded>(this);
+            EventStream.Subscribe<ApplicationMsgs.ApplicationCreated>(this);
+            EventStream.Subscribe<ApplicationMsgs.PolicyCreated>(this);
+            EventStream.Subscribe<RoleMsgs.RoleCreated>(this);
 
-
-
-            using (var appReader = conn.GetReader("RoleReader"))
-            {
-                appReader.EventStream.Subscribe<ApplicationMsgs.ApplicationCreated>(this);
-                appReader.EventStream.Subscribe<ApplicationMsgs.PolicyCreated>(this);
-                appReader.EventStream.Subscribe<RoleMsgs.RoleCreated>(this);
-
+            using (var appReader = conn.GetReader("appReader")) {
+                appReader.EventStream.Subscribe<Message>(this);
                 appReader.Read<Domain.SecuredApplication>(appId);
             }
-            if (dbApp == null)
-            {
-                dbApp = _applications[appId];
-            }
             Policy.OwningApplication.UpdateApplicationDetails(appId);
-
+            Policy.OwningApplication.ClientSecret = dbApp.ClientSecret;
+            Policy.OwningApplication.RedirectionUrl = dbApp.RedirectionUrl;
             Policy.PolicyId = dbApp.Policies.First().PolicyId; //todo:add multi policy support
 
             //enrich db with roles from the base policy, if any are missing
@@ -95,9 +92,9 @@ namespace ReactiveDomain.Policy.Application
                 if (_roles.Values.All(r => !r.Name.Equals(role.Name, StringComparison.OrdinalIgnoreCase)))
                 {
                     var roleId = Guid.NewGuid();
-                    var application = _repo.GetById<Domain.SecuredApplication>(appId, _source);
+                    var application = repo.GetById<Domain.SecuredApplication>(appId, source);
                     application.DefaultPolicy.AddRole(roleId, role.Name);
-                    _repo.Save(application);
+                    repo.Save(application);
                     role.SetRoleId(roleId);
                     _roles.Add(roleId, new Role(roleId, role.Name, role.PolicyId));
                 }
@@ -127,25 +124,33 @@ namespace ReactiveDomain.Policy.Application
 
         public void Handle(ApplicationMsgs.ApplicationCreated @event)
         {
-            if (_applications.ContainsKey(@event.ApplicationId)) return;
+            if (dbApp != null) { return; }
 
-            _applications.Add(
-                @event.ApplicationId,
+            dbApp =
                 new SecuredApplication(
                     @event.ApplicationId,
                     @event.Name,
                     @event.ApplicationVersion
-                ));
+                );
         }
 
+        public void Handle(ApplicationMsgs.STSClientDetailsAdded @event) {
+            if (dbApp.Id != @event.ApplicationId){ return; }
+            dbApp.ClientSecret = @event.EncryptedClientSecret;
+            dbApp.RedirectionUrl = @event.RedirectUri;
+        }
+
+        public void Handle(ApplicationMsgs.STSClientSecretAdded @event) {
+            if (dbApp.Id != @event.ApplicationId){ return; }
+            dbApp.ClientSecret = @event.EncryptedClientSecret;
+        }
         public void Handle(ApplicationMsgs.PolicyCreated @event)
         {
-            if (!_applications.ContainsKey(@event.ApplicationId)) return;
-            var app = _applications[@event.ApplicationId];
-            app.AddPolicy(
+            if (dbApp.Id != @event.ApplicationId){ return; }
+            dbApp.AddPolicy(
                 new SecurityPolicy(
                     @event.ClientId,
-                    @event.PolicyId, app,
+                    @event.PolicyId, dbApp,
                     principal => default
                 )
             );

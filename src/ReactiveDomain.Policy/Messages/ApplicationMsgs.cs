@@ -16,11 +16,13 @@ namespace ReactiveDomain.Policy.Messages
         {
             /// <summary>The unique ID of the new application.</summary>
             public readonly Guid ApplicationId;
+
             /// <summary> Application name</summary>
             public readonly string Name;
+
             /// <summary> Application name</summary>
             public readonly string Version;
-            
+
             /// <summary>
             /// Register a new application.
             /// </summary>
@@ -41,15 +43,17 @@ namespace ReactiveDomain.Policy.Messages
         /// <summary>
         /// Application Created.
         /// </summary>
-        public class ApplicationCreated  : Event
+        public class ApplicationCreated : Event
         {
             /// <summary>The unique ID of the new application.</summary>
             public readonly Guid ApplicationId;
+
             /// <summary> Application name</summary>
             public readonly string Name;
+
             /// <summary> Application name</summary>
             public readonly string ApplicationVersion;
-            
+
             /// <summary>
             /// Register a new application.
             /// </summary>
@@ -74,22 +78,31 @@ namespace ReactiveDomain.Policy.Messages
         {
             /// <summary>The unique ID of the new ConfigureApplication command.</summary>
             public readonly Guid Id;
+
             /// <summary> Application name</summary>
             public readonly string Name;
+
             /// <summary> Application version</summary>
             public readonly string Version;
+
             /// <summary> does this application demand one role per user?</summary>
             public bool OneRolePerUser { get; }
+
             /// <summary> List of roles available for this application </summary>
             public List<string> Roles { get; }
+
             /// <summary> SecAdminRole name, this must exists in Roles list</summary>
             public string SecAdminRole { get; }
+
             /// <summary> Default user name</summary>
             public readonly string DefaultUser;
+
             /// <summary> Default user's domain name</summary>
             public readonly string DefaultDomain;
+
             /// <summary> Roles which default user would be assigned.This list must be a subset of Roles</summary>
             public List<string> DefaultUserRoles { get; }
+
             /// <summary> Authentication provider, for local and domains it should be AD and for external, it should be the name</summary>
             public string AuthProvider { get; }
 
@@ -203,7 +216,8 @@ namespace ReactiveDomain.Policy.Messages
             }
         }
 
-        public class CreatePolicy : Command {
+        public class CreatePolicy : Command
+        {
             public readonly Guid PolicyId;
             public readonly string ClientId;
             public readonly Guid ApplicationId;
@@ -211,14 +225,16 @@ namespace ReactiveDomain.Policy.Messages
             public CreatePolicy(
                 Guid policyId,
                 string clientId,
-                Guid applicationId) {
+                Guid applicationId)
+            {
                 PolicyId = policyId;
                 ClientId = clientId;
                 ApplicationId = applicationId;
             }
         }
 
-        public class PolicyCreated : Event {
+        public class PolicyCreated : Event
+        {
             public readonly Guid PolicyId;
             public readonly string ClientId;
             public readonly Guid ApplicationId;
@@ -226,11 +242,60 @@ namespace ReactiveDomain.Policy.Messages
             public PolicyCreated(
                 Guid policyId,
                 string clientId,
-                Guid applicationId) {
+                Guid applicationId)
+            {
                 PolicyId = policyId;
                 ClientId = clientId;
                 ApplicationId = applicationId;
             }
         }
+
+        public class STSClientDetailsAdded : Event {
+            public readonly Guid ApplicationId;
+            public readonly string ClientId;
+            public readonly string[] GrantTypes;
+            public readonly string EncryptedClientSecret;
+            public readonly string[] AllowedScopes;
+            public readonly string RedirectUri;
+
+            public STSClientDetailsAdded(
+                Guid applicationId,
+                string clientId,
+                string[] grantTypes,
+                string encryptedClientSecret,
+                string[] allowedScopes,
+                string redirectUri )
+            {
+                ApplicationId = applicationId;
+                ClientId = clientId;
+                GrantTypes = grantTypes;
+                EncryptedClientSecret = encryptedClientSecret;
+                AllowedScopes = allowedScopes;
+                RedirectUri = redirectUri;
+            }
+        }
+        public class STSClientSecretAdded : Event
+        {
+            
+            public readonly Guid ApplicationId;
+            public readonly string EncryptedClientSecret;
+
+            public STSClientSecretAdded(Guid applicationId, string encryptedClientSecret) {
+               ApplicationId = applicationId;
+               EncryptedClientSecret = encryptedClientSecret;
+            }
+        }
+        public class STSClientSecretRemoved : Event
+        {
+            public readonly Guid ApplicationId;
+            public readonly string EncryptedClientSecret;
+
+            public STSClientSecretRemoved(Guid applicationId,string encryptedClientSecret)
+            {
+                ApplicationId = applicationId;
+                EncryptedClientSecret = encryptedClientSecret;
+            }
+        }
+
     }
 }

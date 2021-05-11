@@ -14,7 +14,8 @@ namespace ReactiveDomain.Policy.Domain
     {
         private readonly Dictionary<Guid, SecurityPolicy> _policies = new Dictionary<Guid, SecurityPolicy>();
         private readonly HashSet<string> _policyNames = new HashSet<string>();
-
+        private string _clientId;
+        private bool _stsClientDetailsConfigured;
         // ReSharper disable once UnusedMember.Local
         // used via reflection in the repository
         private SecuredApplication()
@@ -26,9 +27,15 @@ namespace ReactiveDomain.Policy.Domain
         {
             Register<ApplicationMsgs.ApplicationCreated>(Apply);
             Register<ApplicationMsgs.PolicyCreated>(Apply);
+            Register<ApplicationMsgs.STSClientDetailsAdded>(Apply);
         }
         //Apply State Changes
-        private void Apply(ApplicationMsgs.ApplicationCreated @event) => Id = @event.ApplicationId;
+        private void Apply(ApplicationMsgs.ApplicationCreated @event)
+        {
+
+            Id = @event.ApplicationId;
+            _clientId = @event.Name;
+        }
 
         private void Apply(ApplicationMsgs.PolicyCreated @event)
         {
@@ -38,6 +45,10 @@ namespace ReactiveDomain.Policy.Domain
             _policyNames.Add(@event.ClientId);
         }
 
+        private void Apply(ApplicationMsgs.STSClientDetailsAdded @event)
+        {
+            _stsClientDetailsConfigured = true;
+        }
         //Public Methods
 
         /// <summary>
@@ -79,7 +90,7 @@ namespace ReactiveDomain.Policy.Domain
             // Event should be idempotent in RMs, so no validation necessary.
             Raise(new ApplicationMsgs.ApplicationUnretired(Id));
         }
-        public SecurityPolicy DefaultPolicy { get; private set;  }
+        public SecurityPolicy DefaultPolicy { get; private set; }
         public IReadOnlyList<SecurityPolicy> Policies => _policies.Values.ToList().AsReadOnly();
         public SecurityPolicy AddAdditionalPolicy(Guid policyId, string policyName)
         {
@@ -92,6 +103,32 @@ namespace ReactiveDomain.Policy.Domain
             Raise(new ApplicationMsgs.PolicyCreated(policyId, policyName, Id));
             return _policies[policyId];
         }
+        public void AddSTSClientSecret(
+            string encryptedClientSecret)
+        {
+            Ensure.NotNullOrEmpty(encryptedClientSecret, nameof(encryptedClientSecret));
+            if (_stsClientDetailsConfigured)
+            {
+                Raise(new ApplicationMsgs.STSClientSecretAdded(Id, encryptedClientSecret));
+            }
+            else
+            {
+                Raise(new ApplicationMsgs.STSClientDetailsAdded(
+                    Id,
+                    _clientId,
+                    new[] { "client_credentials", "authorization_code" },
+                    encryptedClientSecret,
+                    new[] { "openid", "profile" },
+                    "http://localhost/elbe"
+                    ));
+            }
+        }
 
+        public void RemoveSTSClientSecret(
+            string encryptedClientSecret)
+        {
+            Ensure.NotNullOrEmpty(encryptedClientSecret, nameof(encryptedClientSecret));
+            Raise(new ApplicationMsgs.STSClientSecretRemoved(Id, encryptedClientSecret));
+        }
     }
 }

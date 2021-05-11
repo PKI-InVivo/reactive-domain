@@ -10,6 +10,9 @@ namespace ReactiveDomain.Policy.Application
         public Guid Id { get; private set; }
         public string Name { get; private set; }
         public string Version { get; private set; }
+        public string RedirectionUrl { get; set; }
+        public string ClientSecret { get; set; }
+
         private readonly List<SecurityPolicy> _polices;
         public IReadOnlyList<SecurityPolicy> Policies => _polices.AsReadOnly();
 

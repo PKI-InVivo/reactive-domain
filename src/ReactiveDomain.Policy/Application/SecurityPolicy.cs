@@ -24,6 +24,10 @@ namespace ReactiveDomain.Policy.Application
         public string ApplicationName => OwningApplication.Name;
         public string ApplicationVersion => OwningApplication.Version;
 
+        public string ClientId => OwningApplication.Name;
+        public string RedirectionUrl => OwningApplication.RedirectionUrl;
+        public string ClientSecret => OwningApplication.ClientSecret;
+
         public AuthorizedUser CurrentUser
         {
             get => _currentUser;
