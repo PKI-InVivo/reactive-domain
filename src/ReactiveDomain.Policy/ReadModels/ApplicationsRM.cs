@@ -140,7 +140,7 @@ namespace ReactiveDomain.Policy.ReadModels
         public void Handle(ApplicationMsgs.STSClientDetailsAdded @event) {
             if (_applications.TryGetValue(@event.ApplicationId, out var app)) {
                 app.ClientSecret = @event.EncryptedClientSecret;
-                app.RedirectionUrl = @event.RedirectUri;
+                app.RedirectionUris = @event.RedirectUris;
             }
         }
 

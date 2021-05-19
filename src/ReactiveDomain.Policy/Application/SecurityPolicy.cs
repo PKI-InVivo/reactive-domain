@@ -23,7 +23,7 @@ namespace ReactiveDomain.Policy.Application
         public string ApplicationVersion => OwningApplication.Version;
 
         public string ClientId => OwningApplication.Name;
-        public string RedirectionUrl => OwningApplication.RedirectionUrl;
+        public string[] RedirectionUris => OwningApplication.RedirectionUris;
         public string ClientSecret => OwningApplication.ClientSecret;
 
         public AuthorizedUser CurrentUser { get; set; }

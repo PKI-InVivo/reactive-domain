@@ -118,8 +118,8 @@ namespace ReactiveDomain.Policy.Domain
                     _clientId,
                     new[] { "client_credentials", "authorization_code" },
                     encryptedClientSecret,
-                    new[] { "openid", "profile" },
-                    "http://localhost/elbe"
+                    new[] { "openid", "profile", "email", "elbe-authentication" },
+                    new [] {"http://localhost/elbe", "/root/signin-google"}
                     ));
             }
         }

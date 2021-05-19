@@ -256,7 +256,7 @@ namespace ReactiveDomain.Policy.Messages
             public readonly string[] GrantTypes;
             public readonly string EncryptedClientSecret;
             public readonly string[] AllowedScopes;
-            public readonly string RedirectUri;
+            public readonly string[] RedirectUris;
 
             public STSClientDetailsAdded(
                 Guid applicationId,
@@ -264,14 +264,14 @@ namespace ReactiveDomain.Policy.Messages
                 string[] grantTypes,
                 string encryptedClientSecret,
                 string[] allowedScopes,
-                string redirectUri )
+                string[] redirectUris )
             {
                 ApplicationId = applicationId;
                 ClientId = clientId;
                 GrantTypes = grantTypes;
                 EncryptedClientSecret = encryptedClientSecret;
                 AllowedScopes = allowedScopes;
-                RedirectUri = redirectUri;
+                RedirectUris = redirectUris;
             }
         }
         public class STSClientSecretAdded : Event

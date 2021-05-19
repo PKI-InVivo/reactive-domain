@@ -65,7 +65,7 @@ namespace ReactiveDomain.Identity
             _clientsByClientId.TryGetValue(clientId, out var client);
             return await Task.FromResult(client);
         }
-
+        public IReadOnlyList<Client> Clients => _clientsByClientId.Values.ToList().AsReadOnly();
         public void Handle(ApplicationMsgs.STSClientDetailsAdded @event)
         {
             var client =
@@ -75,7 +75,7 @@ namespace ReactiveDomain.Identity
                      AllowedGrantTypes = @event.GrantTypes,
                      ClientSecrets = { new Secret(@event.EncryptedClientSecret.ToSha256()) },
                      AllowedScopes = @event.AllowedScopes,
-                     RedirectUris = new[] { @event.RedirectUri }
+                     RedirectUris =  @event.RedirectUris 
                  };
             _clientsByAppId.Add(@event.ApplicationId, client);
             _clientsByClientId.Add(@event.ClientId, client);

@@ -83,7 +83,7 @@ namespace ReactiveDomain.Policy.Application
             }
             Policy.OwningApplication.UpdateApplicationDetails(appId);
             Policy.OwningApplication.ClientSecret = dbApp.ClientSecret;
-            Policy.OwningApplication.RedirectionUrl = dbApp.RedirectionUrl;
+            Policy.OwningApplication.RedirectionUris = dbApp.RedirectionUris;
             Policy.PolicyId = dbApp.Policies.First().PolicyId; //todo:add multi policy support
 
             //enrich db with roles from the base policy, if any are missing
@@ -137,7 +137,7 @@ namespace ReactiveDomain.Policy.Application
         public void Handle(ApplicationMsgs.STSClientDetailsAdded @event) {
             if (dbApp.Id != @event.ApplicationId){ return; }
             dbApp.ClientSecret = @event.EncryptedClientSecret;
-            dbApp.RedirectionUrl = @event.RedirectUri;
+            dbApp.RedirectionUris = @event.RedirectUris;
         }
 
         public void Handle(ApplicationMsgs.STSClientSecretAdded @event) {
