@@ -75,7 +75,11 @@ namespace ReactiveDomain.Identity
                      AllowedGrantTypes = @event.GrantTypes,
                      ClientSecrets = { new Secret(@event.EncryptedClientSecret.ToSha256()) },
                      AllowedScopes = @event.AllowedScopes,
-                     RedirectUris =  @event.RedirectUris 
+                     RedirectUris =  @event.RedirectUris,
+                     PostLogoutRedirectUris =  @event.PostLogoutRedirectUris,
+                     FrontChannelLogoutUri =  @event.FrontChannelLogoutUri,
+                     AllowOfflineAccess = true,
+                     RequireConsent = false,
                  };
             _clientsByAppId.Add(@event.ApplicationId, client);
             _clientsByClientId.Add(@event.ClientId, client);

@@ -257,6 +257,8 @@ namespace ReactiveDomain.Policy.Messages
             public readonly string EncryptedClientSecret;
             public readonly string[] AllowedScopes;
             public readonly string[] RedirectUris;
+            public readonly string[] PostLogoutRedirectUris;
+            public readonly string FrontChannelLogoutUri;
 
             public STSClientDetailsAdded(
                 Guid applicationId,
@@ -264,7 +266,9 @@ namespace ReactiveDomain.Policy.Messages
                 string[] grantTypes,
                 string encryptedClientSecret,
                 string[] allowedScopes,
-                string[] redirectUris )
+                string[] redirectUris,
+                string[] postLogoutRedirectUris,
+                string frontChannelLogoutUri )
             {
                 ApplicationId = applicationId;
                 ClientId = clientId;
@@ -272,6 +276,8 @@ namespace ReactiveDomain.Policy.Messages
                 EncryptedClientSecret = encryptedClientSecret;
                 AllowedScopes = allowedScopes;
                 RedirectUris = redirectUris;
+                PostLogoutRedirectUris = postLogoutRedirectUris;
+                FrontChannelLogoutUri = frontChannelLogoutUri;
             }
         }
         public class STSClientSecretAdded : Event

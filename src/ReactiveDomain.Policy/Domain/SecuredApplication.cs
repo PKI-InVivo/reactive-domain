@@ -116,10 +116,12 @@ namespace ReactiveDomain.Policy.Domain
                 Raise(new ApplicationMsgs.STSClientDetailsAdded(
                     Id,
                     _clientId,
-                    new[] { "client_credentials", "authorization_code" },
+                    new[] { "client_credentials", "password", "authorization_code" },
                     encryptedClientSecret,
-                    new[] { "openid", "profile", "email", "elbe-authentication" },
-                    new [] {"http://localhost/elbe", "/root/signin-google"}
+                    new[] { "openid", "profile", "email", "elbe-authentication", "role" },
+                    new[] { "http://localhost/elbe", "/root/signin-google" },
+                    new[] { "http://localhost/elbe" },
+                     "http://localhost/elbe" 
                     ));
             }
         }
