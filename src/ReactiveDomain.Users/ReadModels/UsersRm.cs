@@ -7,26 +7,24 @@ using ReactiveDomain.Users.Messages;
 
 namespace ReactiveDomain.Users.ReadModels
 {
-    public class UserRm :
+    public class UsersRm :
         ReadModelBase,
         IHandle<UserMsgs.AuthDomainMapped>,
         IHandle<UserMsgs.UserEvent>
     {
-        private readonly IConfiguredConnection _conn;
         private readonly Dictionary<string, Guid> _userIds = new Dictionary<string, Guid>();
         public Dictionary<Guid, UserDTO> Users = new Dictionary<Guid, UserDTO>();
 
-        public UserRm(IConfiguredConnection conn) : base(nameof(UserRm), () => conn.GetListener(nameof(UserRm)))
+        public UsersRm(IConfiguredConnection conn) : base(nameof(UsersRm), () => conn.GetListener(nameof(UsersRm)))
         {
-            _conn = conn;
-            long position = StreamPosition.Start;
-            using (var reader = conn.GetReader(nameof(UserRm)))
+            long position;
+            using (var reader = conn.GetReader(nameof(UsersRm)))
             {
                 reader.EventStream.Subscribe<UserMsgs.UserEvent>(this);
                 reader.Read<User>();
-                position = reader.Position.Value;
-            }           
-            base.EventStream.Subscribe<UserMsgs.UserEvent>(this);
+                position = reader.Position ?? StreamPosition.Start;
+            }
+            EventStream.Subscribe<UserMsgs.UserEvent>(this);
             Start<User>(checkpoint: position);
         }
 

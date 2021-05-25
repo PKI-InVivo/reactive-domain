@@ -6,23 +6,26 @@ using IdentityServer4.Models;
 using IdentityServer4.Stores;
 using ReactiveDomain.Util;
 
-namespace ReactiveDomain.Identity {
+namespace ReactiveDomain.Identity
+{
     public class ResourcesStore : IResourceStore
     {
         private readonly Resources _resources = new Resources();
 
         public ResourcesStore()
         {
-            _resources.IdentityResources.Add( new IdentityResource(
+            _resources.IdentityResources.Add(new IdentityResource(
                 name: "openid",
                 userClaims: new[] { "sub" },
                 displayName: "Your user identifier"));
-            _resources.IdentityResources.Add( new IdentityResource(
-                name: "profile",
-                userClaims: new[] { "name", "email", "website" },
-                displayName: "Your profile data"));
-            _resources.ApiScopes.Add(new ApiScope("api1", "My API"));
-            _resources.ApiScopes.Add(new ApiScope("api2", "My Other API"));
+            //_resources.IdentityResources.Add(new IdentityResource(
+            //    name: "profile",
+            //    userClaims: new[] { "name", "email", "website" },
+            //    displayName: "Your profile data"));
+            _resources.IdentityResources.Add(new IdentityResource(
+                name:"rd-policy",
+                userClaims:  new []{"policy-access"},
+                displayName: "Reactive Domain Access Policy"));
         }
         //todo:use hash set operations for comparisons
 
@@ -55,9 +58,11 @@ namespace ReactiveDomain.Identity {
             var apiResources = new List<ApiResource>();
             if (!names.IsEmpty())
             {
-                foreach (var apiResource in _resources.ApiResources) {
+                foreach (var apiResource in _resources.ApiResources)
+                {
                     var scopesHash = new HashSet<string>(apiResource.Scopes);
-                    if (scopesHash.Overlaps(names)) {
+                    if (scopesHash.Overlaps(names))
+                    {
                         apiResources.Add(apiResource);
                     }
                 }

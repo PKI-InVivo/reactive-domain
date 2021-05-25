@@ -118,7 +118,7 @@ namespace ReactiveDomain.Policy.Domain
                     _clientId,
                     new[] { "client_credentials", "password", "authorization_code" },
                     encryptedClientSecret,
-                    new[] { "openid", "profile", "email", "elbe-authentication", "role" },
+                    new[] { "openid", "profile", "rd-policy", "enabled-policies" },
                     new[] { "http://localhost/elbe", "/root/signin-google" },
                     new[] { "http://localhost/elbe" },
                      "http://localhost/elbe" 
