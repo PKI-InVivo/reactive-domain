@@ -12,8 +12,8 @@ namespace ReactiveDomain.Users.ReadModels
         IHandle<UserMsgs.AuthDomainMapped>,
         IHandle<UserMsgs.UserEvent>
     {
-        private readonly Dictionary<string, Guid> _userIds = new Dictionary<string, Guid>();
-        public Dictionary<Guid, UserDTO> Users = new Dictionary<Guid, UserDTO>();
+        public readonly Dictionary<string, Guid> UserIdsBySubjectAtDomain = new Dictionary<string, Guid>();
+        public readonly Dictionary<Guid, UserDTO> UsersById = new Dictionary<Guid, UserDTO>();
 
         public UsersRm(IConfiguredConnection conn) : base(nameof(UsersRm), () => conn.GetListener(nameof(UsersRm)))
         {
@@ -21,38 +21,40 @@ namespace ReactiveDomain.Users.ReadModels
             using (var reader = conn.GetReader(nameof(UsersRm)))
             {
                 reader.EventStream.Subscribe<UserMsgs.UserEvent>(this);
+                reader.EventStream.Subscribe<UserMsgs.AuthDomainMapped>(this);
                 reader.Read<User>();
                 position = reader.Position ?? StreamPosition.Start;
             }
             EventStream.Subscribe<UserMsgs.UserEvent>(this);
+            EventStream.Subscribe<UserMsgs.AuthDomainMapped>(this);
             Start<User>(checkpoint: position);
         }
 
         void IHandle<UserMsgs.AuthDomainMapped>.Handle(UserMsgs.AuthDomainMapped @event)
         {
             var subject = $"{@event.SubjectId}@{@event.AuthDomain}";
-            if (_userIds.ContainsKey(subject))
+            if (UserIdsBySubjectAtDomain.ContainsKey(subject))
             {
-                _userIds[subject] = @event.UserId;
+                UserIdsBySubjectAtDomain[subject] = @event.UserId;
             }
             else
             {
-                _userIds.Add(subject, @event.UserId);
+                UserIdsBySubjectAtDomain.Add(subject, @event.UserId);
             }
         }
         public bool HasUser(string subjectId, string authDomain, out Guid userId)
         {
             var subject = $"{subjectId}@{authDomain}";
-            return _userIds.TryGetValue(subject, out userId);
+            return UserIdsBySubjectAtDomain.TryGetValue(subject, out userId);
         }
 
         public void Handle(UserMsgs.UserEvent @event)
         {
             if (@event is UserMsgs.UserCreated)
             {
-                Users.Add(@event.UserId, new UserDTO(@event.UserId));
+                UsersById.Add(@event.UserId, new UserDTO(@event.UserId));
             }
-            else if (Users.TryGetValue(@event.UserId, out var user))
+            else if (UsersById.TryGetValue(@event.UserId, out var user))
             {
                 user.Handle((dynamic)@event);
             }

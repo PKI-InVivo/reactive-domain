@@ -21,27 +21,17 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Remove="AccountOptions.cs" />
+    <Compile Remove="ActiveDirectoryUserSearch.cs" />
     <Compile Remove="Constants.cs" />
     <Compile Remove="CustomScopes.cs" />
-    <Compile Remove="Domain\SubjectAgg.cs" />
-    <Compile Remove="ReadModels\ApplicationsRM.cs" />
-    <Compile Remove="ReadModels\IUserEntitlementRM.cs" />
-    <Compile Remove="ReadModels\ProvidersRM.cs" />
-    <Compile Remove="ReadModels\UserAccessRM.cs" />
-    <Compile Remove="ReadModels\UsersRM.cs" />
-    <Compile Remove="Services\IPersistedGrantService.cs" />
-    <Compile Remove="Services\PersistedGrantService.cs" />
-    <Compile Remove="Services\UserProfileService.cs" />
+    <Compile Remove="ExternalProvider.cs" />
     <Compile Remove="Stores\CredentialValidationResult.cs" />
-    <Compile Remove="Stores\IUserStore.cs" />
     <Compile Remove="Stores\PersistedGrantStore.cs" />
-    <Compile Remove="Stores\UserStore.cs" />
     <Compile Remove="SubjectAgg.cs" />
     <Compile Remove="UserExceptions.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Messages\ExternalProviderMsgs.cs" />
-    <Compile Include="Messages\IdentityMsgs.cs" />
+    <Compile Include="Messages\SubjectMsgs.cs" />
   </ItemGroup> 
  <ItemGroup>
     <!--<PackageReference Include="IdentityServer4" Version="4.1.2" />-->
@@ -54,10 +44,5 @@
   <ItemGroup>
     <ProjectReference Include="..\ReactiveDomain.Policy\ReactiveDomain.Policy.csproj" />
     <ProjectReference Include="..\ReactiveDomain.Users\ReactiveDomain.Users.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Domain\" />
-    <Folder Include="ReadModels\" />
-    <Folder Include="Services\" />
   </ItemGroup>
 </Project>

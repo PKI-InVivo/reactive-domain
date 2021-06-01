@@ -88,7 +88,7 @@ namespace ReactiveDomain.Users.Domain
             string authDomain,
             string userName)
         {
-            Raise(new UserMsgs.MapToAuthDomain(Id, subjectId, authProvider, authDomain, userName));
+            Raise(new UserMsgs.AuthDomainMapped(Id, subjectId, authProvider, authDomain, userName));
         }
 
         /// <summary>
