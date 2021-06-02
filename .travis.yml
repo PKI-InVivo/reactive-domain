@@ -1,9 +1,9 @@
 sudo: required
 language: csharp
-#os: windows
+os: linux
 mono: none
 dist: trusty
-dotnet: 2.0.0
+dotnet: 5.0.2
 
 branches:
   only:
