@@ -1,6 +1,6 @@
 sudo: required
 language: csharp
-os: windows
+#os: windows
 mono: none
 dist: trusty
 dotnet: 2.0.0
