@@ -9,7 +9,6 @@ namespace ReactiveDomain.Users.ReadModels
 {
     public class UsersRm :
         ReadModelBase,
-        IHandle<UserMsgs.AuthDomainMapped>,
         IHandle<UserMsgs.UserEvent>
     {
         public readonly Dictionary<string, Guid> UserIdsBySubjectAtDomain = new Dictionary<string, Guid>();
@@ -21,27 +20,14 @@ namespace ReactiveDomain.Users.ReadModels
             using (var reader = conn.GetReader(nameof(UsersRm)))
             {
                 reader.EventStream.Subscribe<UserMsgs.UserEvent>(this);
-                reader.EventStream.Subscribe<UserMsgs.AuthDomainMapped>(this);
                 reader.Read<User>();
                 position = reader.Position ?? StreamPosition.Start;
             }
             EventStream.Subscribe<UserMsgs.UserEvent>(this);
-            EventStream.Subscribe<UserMsgs.AuthDomainMapped>(this);
             Start<User>(checkpoint: position);
         }
 
-        void IHandle<UserMsgs.AuthDomainMapped>.Handle(UserMsgs.AuthDomainMapped @event)
-        {
-            var subject = $"{@event.SubjectId}@{@event.AuthDomain}";
-            if (UserIdsBySubjectAtDomain.ContainsKey(subject))
-            {
-                UserIdsBySubjectAtDomain[subject] = @event.UserId;
-            }
-            else
-            {
-                UserIdsBySubjectAtDomain.Add(subject, @event.UserId);
-            }
-        }
+
         public bool HasUser(string subjectId, string authDomain, out Guid userId)
         {
             var subject = $"{subjectId}@{authDomain}";
@@ -50,17 +36,27 @@ namespace ReactiveDomain.Users.ReadModels
 
         public void Handle(UserMsgs.UserEvent @event)
         {
-            if (@event is UserMsgs.UserCreated)
-            {
-                UsersById.Add(@event.UserId, new UserDTO(@event.UserId));
-            }
-            else if (UsersById.TryGetValue(@event.UserId, out var user))
+            if (UsersById.TryGetValue(@event.UserId, out var user))
             {
                 user.Handle((dynamic)@event);
             }
-            if (@event is UserMsgs.AuthDomainMapped mapped)
+
+            switch (@event)
             {
-                this.Handle(mapped);
+                case UserMsgs.UserCreated created:
+                    UsersById.Add(created.UserId, new UserDTO(created.UserId));
+                    break;
+                case UserMsgs.AuthDomainMapped mapped:
+                    var subject = $"{mapped.SubjectId}@{mapped.AuthDomain}";
+                    if (UserIdsBySubjectAtDomain.ContainsKey(subject))
+                    {
+                        UserIdsBySubjectAtDomain[subject] = @event.UserId;
+                    }
+                    else
+                    {
+                        UserIdsBySubjectAtDomain.Add(subject, @event.UserId);
+                    }
+                    break;
             }
         }
     }
