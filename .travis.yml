@@ -27,7 +27,7 @@ script:
   - echo $TRAVIS_PULL_REQUEST_BRANCH
   - echo $TRAVIS_EVENT_TYPE
   - echo $STABLE
-  - dotnet restore ./src/ReactiveDomain.sln -s https://api.nuget.org/
+  - dotnet restore ./src/ReactiveDomain.sln -s https://www.nuget.org/
   - dotnet msbuild ./src/ReactiveDomain.sln -p:Configuration=Debug
   - dotnet msbuild ./src/ReactiveDomain.sln -p:Configuration=Release
   - dotnet test ./src/ReactiveDomain.Messaging.Tests/ReactiveDomain.Messaging.Tests.csproj
