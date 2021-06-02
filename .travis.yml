@@ -19,7 +19,7 @@ before_script:
   - powershell -executionpolicy unrestricted -File ./tools/CheckAssemblyVersion.ps1
   
 script: 
-  - choco install dotnetcore-sdk --version=3.1.200
+  - choco install dotnetcore-sdk --version=3.1.409
   - echo $TRAVIS_BRANCH
   - echo $TRAVIS_BUILD_DIR
   - echo $TRAVIS_PULL_REQUEST
