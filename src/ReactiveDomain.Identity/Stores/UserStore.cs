@@ -42,6 +42,7 @@ namespace ReactiveDomain.Identity.Stores
             else //User not present in ES Add User and Subject for Audit Tracking
             {
                 userId = Guid.NewGuid();
+                var subjectId = Guid.NewGuid();
                 var createMsg = 
                     MessageBuilder.New(
                         ()=> new UserMsgs.CreateUser(
@@ -62,6 +63,7 @@ namespace ReactiveDomain.Identity.Stores
                             domain,
                             retrievedUser.SamAccountName)));
                 var subject = new Subject(
+                    subjectId,
                     userId,
                     retrievedUser.Sid.Value,
                     authProvider,
