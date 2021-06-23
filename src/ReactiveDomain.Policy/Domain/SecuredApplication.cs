@@ -16,6 +16,7 @@ namespace ReactiveDomain.Policy.Domain
         private readonly HashSet<string> _policyNames = new HashSet<string>();
         private string _clientId;
         private bool _stsClientDetailsConfigured;
+        private bool _oneRolePerUser;
         // ReSharper disable once UnusedMember.Local
         // used via reflection in the repository
         private SecuredApplication()
@@ -35,6 +36,7 @@ namespace ReactiveDomain.Policy.Domain
 
             Id = @event.ApplicationId;
             _clientId = @event.Name;
+            _oneRolePerUser = @event.OneRolePerUser;
         }
 
         private void Apply(ApplicationMsgs.PolicyCreated @event)
@@ -58,6 +60,7 @@ namespace ReactiveDomain.Policy.Domain
             Guid id,
             string defaultClientId,
             string version,
+            bool oneRolePerUser,
             ICorrelatedMessage source)
             : base(source)
         {
@@ -69,8 +72,9 @@ namespace ReactiveDomain.Policy.Domain
             Raise(new ApplicationMsgs.ApplicationCreated(
                          id,
                          defaultClientId,
-                         version));
-            Raise(new ApplicationMsgs.PolicyCreated(Guid.NewGuid(), defaultClientId, id));
+                         version,
+                         oneRolePerUser));
+            Raise(new ApplicationMsgs.PolicyCreated(Guid.NewGuid(), defaultClientId, id, oneRolePerUser));
         }
 
         /// <summary>
@@ -100,7 +104,7 @@ namespace ReactiveDomain.Policy.Domain
             {
                 throw new InvalidOperationException($"Cannot add duplicate Policy: {{ Name:{policyName}, Id:{policyId} }}");
             }
-            Raise(new ApplicationMsgs.PolicyCreated(policyId, policyName, Id));
+            Raise(new ApplicationMsgs.PolicyCreated(policyId, policyName, Id, _oneRolePerUser));
             return _policies[policyId];
         }
         public void AddSTSClientSecret(

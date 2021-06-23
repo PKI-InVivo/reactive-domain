@@ -134,7 +134,8 @@ namespace ReactiveDomain.Policy.ReadModels
                 new SecuredApplication(
                     @event.ApplicationId,
                     @event.Name,
-                    @event.ApplicationVersion
+                    @event.ApplicationVersion,
+                    @event.OneRolePerUser
                 ));
         }
         public void Handle(ApplicationMsgs.STSClientDetailsAdded @event) {
